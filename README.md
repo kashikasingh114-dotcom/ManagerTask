@@ -1,4 +1,5 @@
-<b><u>TASK MANAGER</u></b>
+<b>Task Manager</b>
+
 "An interactive web app to manage tasks with calendar and progress tracking".
 
 ## ✨ Features:
