@@ -1,4 +1,4 @@
-<b>Task Manager</b>
+#Task Manager
 
 "An interactive web app to manage tasks with calendar and progress tracking".
 
