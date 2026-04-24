@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Auth</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI';
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    width: 700px;
+    height: 400px;
+    display: flex;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+/* LEFT (LOGIN) */
+.left {
+    width: 50%;
+    padding: 40px;
+    text-align: center;
+}
+
+/* RIGHT (SIGNUP) */
+.right {
+    width: 50%;
+    padding: 40px;
+    background: #f3f4f6;
+    transform: translateX(100%);
+    transition: 0.5s;
+}
+
+.container.active .right {
+    transform: translateX(0);
+}
+
+.container.active .left {
+    transform: translateX(-100%);
+}
+
+/* INPUTS */
+input {
+    width: 90%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+/* BUTTON */
+button {
+    width: 100%;
+    padding: 10px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #4f46e5;
+}
+
+.switch {
+    margin-top: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #6366f1;
+}
+body.dark {
+    background: #0f172a;
+    color: #e2e8f0;
+}
+
+body.dark .container {
+    background: #1e293b;
+}
+
+body.dark input {
+    background: #0f172a;
+    color: white;
+    border: 1px solid #334155;
+}
+
+body.dark .right {
+    background: #111827;
+}
+
+body.dark button {
+    background: #22c55e;
+}
+.theme-toggle {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    background: #ddd;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+body.dark .theme-toggle {
+    background: #1e293b;
+    color: white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container" id="box">
+
+    <!-- LOGIN -->
+    <div class="left">
+        <h2>🔐 Login</h2>
+        <input id="loginUser" placeholder="Username">
+        <div style="position:relative;">
+          <input id="loginPass" type="password" placeholder="Password">
+          <span onclick="togglePassword('loginPass', this)" 
+            style="position:absolute; right:10px; top:10px; cursor:pointer;">
+            👁
+          </span>
+        </div>  
+        <button onclick="login()">Login</button>
+        <p class="switch" onclick="showSignup()">New? Signup</p>
+    </div>
+    <!-- SIGNUP -->
+    <div class="right">
+        <h2>📝 Signup</h2>
+        <input id="signupUser" placeholder="Username">
+        <div style="position:relative;">
+          <input id="signupPass" type="password" placeholder="Password">
+          <span onclick="togglePassword('signupPass', this)" 
+            style="position:absolute; right:10px; top:10px; cursor:pointer;">
+            👁
+          </span>
+        </div>
+        <button onclick="signup()">Signup</button>
+        <p class="switch" onclick="showLogin()">Already have account?</p>
+    </div>
+    <div class="theme-toggle" onclick="toggleDarkMode()">🌙</div>
+</div>
+
+<script>
+// ------------------------
+// SWITCH UI
+// ------------------------
+function showSignup() {
+    document.getElementById("box").classList.add("active");
+}
+
+function showLogin() {
+    document.getElementById("box").classList.remove("active");
+}
+
+// ------------------------
+// 🔐 LOGIN (FIXED)
+// ------------------------
+async function login() {
+    let username = document.getElementById("loginUser").value.trim();
+    let password = document.getElementById("loginPass").value.trim();
+
+    if (!username || !password) {
+        alert("Enter username & password");
+        return;
+    }
+
+    let res = await fetch("http://127.0.0.1:8000/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ username, password })
+    });
+
+    let data = await res.json();
+
+    if (!res.ok) {
+        alert(data.detail || "Invalid login");
+        return;
+    }
+
+    // ✅ IMPORTANT FIX
+    localStorage.setItem("user", JSON.stringify(data));
+
+    window.location.href = "index.html";
+}
+
+// ------------------------
+// 📝 SIGNUP
+// ------------------------
+async function signup() {
+    let username = document.getElementById("signupUser").value.trim();
+    let password = document.getElementById("signupPass").value.trim();
+
+    if (!username || !password) {
+        alert("Enter username & password");
+        return;
+    }
+
+    let res = await fetch("http://127.0.0.1:8000/signup", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ username, password })
+    });
+
+    let data = await res.json();
+
+    if (!res.ok) {
+        alert(data.detail || "Signup failed");
+        return;
+    }
+
+    alert("Signup successful! Now login.");
+    showLogin();
+}
+function toggleDarkMode() {
+    const isDark = document.body.classList.toggle("dark");
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const theme = localStorage.getItem("theme");
+
+    if (theme === "dark") {
+        document.body.classList.add("dark");
+    }
+});
+function togglePassword(inputId, icon) {
+    let input = document.getElementById(inputId);
+
+    if (input.type === "password") {
+        input.type = "text";
+        icon.innerText = "👁️"; 
+    } else {
+        input.type = "password";
+        icon.innerText = "🙈";
+    }
+}
+</script>
