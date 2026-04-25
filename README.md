@@ -14,4 +14,4 @@
 * CSS
 * JavaScript
 
-### 👤 Author: Kashika Singh
+## 👤 Author: Kashika Singh
