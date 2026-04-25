@@ -45,7 +45,7 @@ class TaskRequest(BaseModel):
     user_id: int
 
 class ProgressUpdate(BaseModel):
-    progress: str   # ✅ FIXED (was query param before)
+    progress: int  
 
 # ------------------------
 # SIGNUP
@@ -109,7 +109,8 @@ def add_task(data: TaskRequest, db: Session = Depends(get_db)):
         priority=ai["priority"],
         category=ai["category"],
         status="pending",
-        user_id=data.user_id
+        user_id=data.user_id,
+        progress="0"
     )
 
     db.add(task)
@@ -136,33 +137,12 @@ def get_tasks(user_id: int, db: Session = Depends(get_db)):
             "duration": t.duration,
             "priority": t.priority,
             "category": t.category,
-            "status": t.status
+            "status": t.status,
+            "progress": t.progress  
+
         }
         for t in tasks
     ]
-# ------------------------
-# MARK DONE
-# ------------------------
-from fastapi import Body
-
-@app.put("/task-progress/{task_id}")
-def progress(
-    task_id: int,
-    data: dict = Body(...),   # ✅ FORCE JSON BODY
-    db: Session = Depends(get_db)
-):
-    print("RAW DATA:", data)  # 👈 debug
-
-    task = db.query(Task).filter(Task.id == task_id).first()
-
-    if not task:
-        raise HTTPException(status_code=404, detail="Not found")
-
-    task.progress = str(data.get("progress", 0))  # ✅ safe
-    db.commit()
-
-    return {"message": "saved"}
-
 # ------------------------
 # DELETE
 # ------------------------

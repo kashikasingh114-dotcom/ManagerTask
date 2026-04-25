@@ -77,36 +77,39 @@ async function getTasks() {
     }
 
     list.innerHTML = "";
-
     data.forEach(task => {
+
+        let saved = JSON.parse(localStorage.getItem("task_" + task.id + "_" + user.user_id)) || [];
+
+        let isCompleted = saved.length >= task.duration;
+
         let li = document.createElement("li");
 
         li.innerHTML = `
         <div class="task-row">
 
-        <input type="checkbox"
-        ${task.status === "done" ? "checked" : ""}
-        onclick="markDone(${task.id})">
+            <input type="checkbox"
+            ${isCompleted ? "checked" : ""}
+            onclick="markDone(${task.id})">
 
-        <div class="task-info">
-            <div class="task-title ${task.status === "done" ? "done" : ""}">
-                ${task.title}
+            <div class="task-info">
+                <div class="task-title ${isCompleted ? "done" : ""}">
+                   ${task.title} ${isCompleted ? "✅" : ""}
+                </div>
+
+                <div class="task-details">
+                   <span>⏱ ${task.duration} days</span>
+                </div>
             </div>
 
-            <div class="task-details">
-                <span>⏱ ${task.duration} days</span>
-            </div>
+            <button onclick="openTask(${task.id})">Go</button>
+            <button onclick="deleteTask(${task.id})">🗑</button>
         </div>
-
-        <button onclick="openTask(${task.id})">Go</button>
-        <button onclick="deleteTask(${task.id})">🗑</button>
-    </div>
-`;
+    `   ;
 
         list.appendChild(li);
     });
 }
-
 // ------------------------
 // ✅ MARK DONE
 // ------------------------

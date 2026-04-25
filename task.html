@@ -253,7 +253,6 @@ body.dark .info p {
 
 <script>
 
-let id = new URLSearchParams(window.location.search).get("id");
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let duration = 0;
@@ -274,6 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* LOAD TASK */
+let user = JSON.parse(localStorage.getItem("user"));
 const params = new URLSearchParams(window.location.search);
 const taskId = params.get("id");
 
@@ -304,7 +304,7 @@ function createCalendar() {
     let calendar = document.getElementById("calendar");
     calendar.innerHTML = "";
 
-    let saved = JSON.parse(localStorage.getItem("task_" + id)) || [];
+    let saved = JSON.parse(localStorage.getItem("task_" + taskId + "_" + user.user_id)) || [];
 
     let today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -352,30 +352,20 @@ function createCalendar() {
         if (date < today) {
             div.classList.add("disabled");
         } else {
-           div.onclick = function () {
-
-    let saved = JSON.parse(localStorage.getItem("task_" + id)) || [];
-
-    // prevent clicking more than duration
-    if (saved.length >= duration) {
-        alert("Task already completed!");
-        return;
-    }
-
-    // prevent duplicate click
-    if (saved.includes(dateStr)) {
-        return;
-    }
-
-    // add only once
-    saved.push(dateStr);
-
-    div.classList.add("done");
-
-    localStorage.setItem("task_" + id, JSON.stringify(saved));
-
-    updateProgress();
-};
+            div.onclick = function () {
+                let saved = JSON.parse(localStorage.getItem("task_" + taskId + "_" + user.user_id)) || [];
+                if (saved.length >= duration) {
+                    alert("Task already completed!");
+                    return;
+                }
+                if (saved.includes(dateStr)) {
+                    return;
+                }
+                saved.push(dateStr);
+                div.classList.add("done");
+                localStorage.setItem("task_" + taskId + "_" + user.user_id, JSON.stringify(saved));
+                updateProgress();
+            };
         }
         console.log("Calendar running");
 
@@ -387,12 +377,14 @@ function createCalendar() {
 
 /* PROGRESS */
 function updateProgress() {
-    let saved = JSON.parse(localStorage.getItem("task_" + id)) || [];
+    let saved = JSON.parse(localStorage.getItem("task_" + taskId + "_" + user.user_id)) || [];
     let done = saved.length;
 
     let percent = duration === 0 ? 0 : Math.floor((done / duration) * 100);
 
-    if (done > duration) done = duration;
+    if (done >= duration){
+        markTaskCompleted();
+    }
     if (percent > 100) percent = 100;
 
     let circle = document.getElementById("circle");
@@ -406,11 +398,11 @@ function updateProgress() {
         `conic-gradient(#22c55e ${percent * 3.6}deg, #e5e7eb 0deg)`;
 }
 async function saveProgress() {
-    let saved = JSON.parse(localStorage.getItem("task_" + id)) || [];
+    let saved = JSON.parse(localStorage.getItem("task_" + taskId + "_" + user.user_id)) || [];
 
     console.log("NEW CODE RUNNING");  // 👈 ADD THIS
 
-    await fetch(`http://127.0.0.1:8000/task-progress/${id}`, {
+    await fetch(`http://127.0.0.1:8000/task-progress/${taskId}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
@@ -435,7 +427,11 @@ function prevMonth() {
     if (currentMonth < 0) { currentMonth = 11; currentYear--; }
     createCalendar();
 }
-
+async function markTaskCompleted() {
+    await fetch(`http://127.0.0.1:8000/task-complete/${taskId}`, {
+        method: "PUT"
+    });
+}
 
 </script>
 
